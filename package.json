@@ -1,0 +1,49 @@
+{
+  "name": "selner",
+  "displayName": "selner",
+  "description": "Run a javascript command for the selected text provided in the \"sel\" variable",
+  "version": "1.0.0",
+  "engines": {
+    "vscode": "^1.71.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:selner.selner"
+  ],
+  "browser": "./dist/web/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "selner.selner",
+        "title": "Selner"
+      }
+    ]
+  },
+  "scripts": {
+    "pretest": "pnpm run compile-web",
+    "vscode:prepublish": "pnpm run package-web",
+    "compile-web": "webpack",
+    "watch-web": "webpack --watch",
+    "package-web": "webpack --mode production --devtool hidden-source-map",
+    "lint": "eslint src --ext ts",
+    "run-in-browser": "vscode-test-web --browserType=chromium --extensionDevelopmentPath=. ."
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.71.0",
+    "@types/mocha": "^10.0.0",
+    "eslint": "^8.24.0",
+    "@typescript-eslint/eslint-plugin": "^5.38.1",
+    "@typescript-eslint/parser": "^5.38.1",
+    "mocha": "^10.0.0",
+    "typescript": "^4.8.4",
+    "@vscode/test-web": "^0.0.30",
+    "ts-loader": "^9.4.1",
+    "webpack": "^5.74.0",
+    "webpack-cli": "^4.10.0",
+    "@types/webpack-env": "^1.18.0",
+    "assert": "^2.0.0",
+    "process": "^0.11.10"
+  }
+}
