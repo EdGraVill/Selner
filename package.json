@@ -3,6 +3,11 @@
   "displayName": "selner",
   "description": "Run a javascript command for the selected text provided in the \"sel\" variable",
   "version": "1.0.0",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/EdGraVill/Selner.git"
+  },
   "engines": {
     "vscode": "^1.71.0"
   },
