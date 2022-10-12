@@ -1,6 +1,6 @@
 {
   "name": "selner",
-  "displayName": "selner",
+  "displayName": "Selner",
   "description": "Run a javascript command for the selected text provided in the \"sel\" variable",
   "version": "1.0.0",
   "license": "MIT",
@@ -8,12 +8,14 @@
     "type": "git",
     "url": "https://github.com/EdGraVill/Selner.git"
   },
+  "publisher": "EdGraVill",
   "engines": {
     "vscode": "^1.71.0"
   },
   "categories": [
-    "Other"
+    "Snippets", "Formatters", "Other"
   ],
+  "icon": "media/logo-512x512.png",
   "activationEvents": [
     "onCommand:selner.selner"
   ],
