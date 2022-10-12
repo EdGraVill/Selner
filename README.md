@@ -1,4 +1,6 @@
-![Selner Logo](https://raw.githubusercontent.com/EdGraVill/Selner/main/media/logo-512x512.png)
+<p align="center">
+  <img alt="Selner Logo" src="https://raw.githubusercontent.com/EdGraVill/Selner/main/media/logo-192x192.png" />
+</p>
 
 # Selner
 
