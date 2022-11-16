@@ -8,6 +8,8 @@
 
 Perform a javascript string transform directly in your vscode's selection.
 
+**Now with multi selection support**
+
 > Browser Support
 
 ![Extension Overview](https://raw.githubusercontent.com/EdGraVill/Selner/main/media/overview.gif)

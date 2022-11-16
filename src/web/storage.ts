@@ -1,88 +1,113 @@
-import * as vscode from 'vscode';
+import { ExtensionContext, Memento } from 'vscode';
 
 export interface Script {
-	name: string;
-	description?: string;
-	script: string;
+  code: string;
+  description?: string;
+  name: string;
 }
 
-export interface Selner {
-	lastUsed: string[];
-	scripts: Record<string, Script>;
+export interface Store {
+  scripts: Record<string, Script>;
+  recentlyUsed: string[];
 }
 
 export default class Storage {
-  private projection: Selner;
+  private static readonly storeKey = 'selner:store';
+  private static readonly emptyStore: Store = {
+    recentlyUsed: [],
+    scripts: {},
+  };
 
-  constructor(private readonly memento: vscode.Memento) {
-    this.projection = this.update();
+  private readonly globalState: Memento;
+  private store: Store = Storage.emptyStore;
+
+  constructor(private readonly context: ExtensionContext) {
+    this.globalState = this.context.globalState;
+
+    this.updateStore();
   }
 
-  private save(): Storage {
-    const stringified = JSON.stringify(this.projection);
-  
-    this.memento.update('selner', stringified);
-    this.update();
-  
-    return this;
+  private async saveStore() {
+    await this.globalState.update(Storage.storeKey, this.store);
   }
 
-  public update(): Selner {
-    const raw = this.memento.get<string>('selner');
+  private async updateStore(): Promise<Store> {
+    const store = this.globalState.get<Store>(Storage.storeKey);
 
-    const obj: Selner = JSON.parse(raw || JSON.stringify({ lastUsed: [], scripts: {} }));
+    if (!store) {
+      await this.globalState.update(Storage.storeKey, Storage.emptyStore);
+      return Storage.emptyStore;
+    }
 
-    this.projection = obj;
-    return obj;
+    return store;
   }
 
-  public getScript(name: string): Script | undefined {
-    return this.projection.scripts[name];
-  }
+  public async recordScript(script: Script, store?: Store) {
+    if (!store) {
+      await this.updateStore();
+    }
+    
+    const alreadyUsed = this.store.recentlyUsed.findIndex((name) => name === script.name);
 
-  public getScriptList(): Script[] {
-    return Object.keys(this.projection.scripts).map((name) => this.projection.scripts[name]);
-  }
-
-  public getLastUsed(): Script[] {
-    const scripts = this.projection.lastUsed.map((name) => this.getScript(name)).filter(Boolean);
-
-    return scripts as Script[];
-  }
-
-  public pushLastUsed(name: string): Storage {
-    const alreadyUsed = this.projection.lastUsed.findIndex((n) => n === name);
     if (alreadyUsed >= 0) {
-      this.projection.lastUsed.splice(alreadyUsed, 1);
-    }
-    this.projection.lastUsed.push(name);
-
-    return this.save();
-  }
-
-  public addScript(name: string, script: string, description?: string): Storage {
-    this.projection.scripts[name] = {
-      name,
-      script,
-      description: description || undefined,
-    };
-
-    this.pushLastUsed(name);
-
-    return this.save();
-  }
-
-  public removeScript(name: string): Storage {
-    if (this.projection.scripts[name]) {
-      delete this.projection.scripts[name];
-  
-      const lastUsedIx = this.projection.lastUsed.findIndex((n) => n === name);
-  
-      if (lastUsedIx >= 0) {
-        this.projection.lastUsed.splice(lastUsedIx, 1);
-      }
+      this.store.recentlyUsed.splice(alreadyUsed, 1);
     }
 
-    return this.save();
+    this.store.recentlyUsed.unshift(script.name);
+
+    if (!store) {
+      await this.saveStore();
+    }
+  }
+
+  public async saveScript(script: Script) {
+    await this.updateStore();
+
+    this.store.scripts[script.name] = script;
+    this.recordScript(script, this.store);
+
+    await this.saveStore();
+  }
+
+  public async removeScript(scriptName: string) {
+    await this.updateStore();
+
+    delete this.store.scripts[scriptName];
+    const alreadyUsed = this.store.recentlyUsed.findIndex((name) => name === scriptName);
+
+    if (alreadyUsed >= 0) {
+      this.store.recentlyUsed.splice(alreadyUsed, 1);
+    }
+
+    await this.saveStore();
+  }
+
+  public async getAllScripts(): Promise<Script[]> {
+    await this.updateStore();
+
+    return Object.values(this.store.scripts);
+  }
+
+  public async getRecentlyUsedScripts(): Promise<Script[]> {
+    await this.updateStore();
+
+    const { recentlyUsed, scripts } = this.store;
+
+    return recentlyUsed.filter((name) => !!scripts[name]).map((name) => scripts[name]);
+  }
+
+  
+  public getScript(scriptName: string, isSync: true): Script | undefined;
+  public getScript(scriptName: string, isSync?: false): Promise<Script | undefined>;
+  public getScript(scriptName: string, isSync: boolean = false): Promise<Script | undefined> | Script | undefined {
+    if (!isSync) {
+      return new Promise<Script | undefined>(async (resolve) => {
+        await this.updateStore();
+
+        resolve(this.store.scripts[scriptName]);
+      });
+    }
+
+    return this.store.scripts[scriptName];
   }
 }
